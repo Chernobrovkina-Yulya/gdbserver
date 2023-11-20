@@ -9,7 +9,7 @@
 
 int client_fd;
 
-void StartClient()
+void StartClient(int port, const char * serv_addr)
 {
     client_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (client_fd == -1)
@@ -20,13 +20,10 @@ void StartClient()
 
     struct sockaddr_in server_addr = {0};
 
-    struct in_addr ip_to_num;
-    inet_pton(AF_INET, "127.0.0.1", &ip_to_num);
-
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr = ip_to_num;
-    server_addr.sin_port = htons(34543);
-    
+    inet_aton(serv_addr, &server_addr.sin_addr);
+    server_addr.sin_port = htons((uint16_t)port);
+
     if(connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
     {
         perror("connect() failed");
@@ -39,9 +36,20 @@ void CloseClient()
     close(client_fd);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-    StartClient();
+    if(argc < 3)
+    {
+        printf("no host name provided\n");
+        exit(EXIT_FAILURE);
+    }
+    const char *serv_addr = argv[1];
+    int port = atoi(argv[2]);
+    StartClient(port, serv_addr);
+
+    char buf[200] = "Hello, server!";
+    write(client_fd, buf, sizeof(buf));
+
     CloseClient();
     return 0;
 }

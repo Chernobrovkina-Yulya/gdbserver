@@ -7,9 +7,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int server_sock_fd;
+#include "../packets.h"
 
-void StartServer()
+int server_sock_fd;
+int client_sock_fd;
+
+void StartServer(int port)
 {
     server_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock_fd == -1)
@@ -24,7 +27,7 @@ void StartServer()
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr = ip_to_num;
-    server_addr.sin_port = htons(34543); // какой порт нужен?
+    server_addr.sin_port = htons((uint16_t)port);
 
     if (bind(server_sock_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
     {
@@ -37,36 +40,49 @@ void StartServer()
         perror("listen() failed");
         exit(EXIT_FAILURE);
     }
+    printf("Listening ... \n");
 
     struct sockaddr_in client_addr;
     socklen_t client_addr_size = sizeof(client_addr);
 
-    int client_sock_fd = accept(server_sock_fd, (struct sockaddr *)&client_addr, &client_addr_size);
+    client_sock_fd = accept(server_sock_fd, (struct sockaddr *)&client_addr, &client_addr_size);
     if (client_sock_fd == -1)
     {
         perror("accept() failed");
         exit(EXIT_FAILURE);
     }
+    printf("Someone connected with adress: %s\n", inet_ntoa(client_addr.sin_addr));
 }
 
 void GetRequest()
 {
-    /*while(true)
+    while(1)
     {
-        ReadPacket();
-        ProcessPacket();
-        WriteFlush();
-    }*/
+        ReadDataOnce();
+        // ProcessPacket();
+        // WriteFlush();
+        PrintInput();
+        break;
+    }
 }
 
 void StopServer()
 {
+    close(client_sock_fd);
     close(server_sock_fd);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-    StartServer();
+    if (argc < 2)
+    { 
+        printf("no port provided\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int port = atoi(argv[1]);
+    printf("TCP server is starting\n");
+    StartServer(port);
     GetRequest();
     StopServer();
     return 0;
