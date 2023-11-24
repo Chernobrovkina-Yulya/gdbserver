@@ -11,6 +11,7 @@
 
 int server_sock_fd;
 int client_sock_fd;
+extern struct Buf input, output;
 
 void StartServer(int port)
 {
@@ -58,7 +59,8 @@ void GetRequest()
 {
     while(1)
     {
-        ReadDataOnce();
+        GetPkt(&input);
+        //PutChar('+');
         // ProcessPacket();
         // WriteFlush();
         PrintInput();
