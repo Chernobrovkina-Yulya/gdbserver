@@ -17,20 +17,23 @@ struct Buf
 // buffer function
 
 void PrintInput();
-int BufRead(struct Buf *buf);
-void BufWrite(struct Buf *pkt, const uint8_t *buf, size_t len);
 void BufClear(struct Buf *pkt);
 
 // packet functions
 
-int CheckSum(char *buf, uint32_t len);
+uint8_t CheckSum(struct Buf* pkt);
 
 int GetPkt(struct Buf *buf);
-int PutPkt();
+void PutPkt();
+void PackStr(char *str, size_t size);
 
 // function to get, put single char
 
 void PutChar(char ch);
 int GetChar();
+
+// conversion functions
+char HexToChar(uint8_t d);
+uint8_t CharToHex(int ch);
 
 #endif

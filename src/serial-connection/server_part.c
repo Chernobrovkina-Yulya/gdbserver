@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "../packets.h"
+#include "../requests.h"
 
 int server_sock_fd;
 int client_sock_fd;
@@ -55,19 +56,6 @@ void StartServer(int port)
     printf("Someone connected with adress: %s\n", inet_ntoa(client_addr.sin_addr));
 }
 
-void GetRequest()
-{
-    while(1)
-    {
-        GetPkt(&input);
-        //PutChar('+');
-        // ProcessPacket();
-        // WriteFlush();
-        PrintInput();
-        break;
-    }
-}
-
 void StopServer()
 {
     close(client_sock_fd);
@@ -85,7 +73,7 @@ int main(int argc, char* argv[])
     int port = atoi(argv[1]);
     printf("TCP server is starting\n");
     StartServer(port);
-    GetRequest();
+    ListenRequests();
     StopServer();
     return 0;
 }
