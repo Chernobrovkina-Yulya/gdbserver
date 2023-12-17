@@ -1,30 +1,34 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include <iostream>
 #include <string.h>
 
-#include "requests.h"
-#include "packets.h"
+#include "server.hpp"
 
-extern struct Buf input, output;
-
-
-// main function - request handler
-void ClientRequest()
+void GDBServer::ProcessRequests()
 {
-    if(GetPkt(&input))
+    while(true)
+    {
+        HandleRequest();
+    }
+}
+
+void GDBServer::HandleRequest()
+{
+    if(GetPkt())
     { 
         perror("Communication failure");
         exit(EXIT_FAILURE);
     }
-    switch (input.data[0])
+
+    std::cout << "packet from GDB: "<< pack.data << '\n';
+
+    switch (pack.data[0])
     {
     case 'H':
         // request for setting thread for opertaions ('m', 'g', etc)
         //  на дпнный момент говорим GDB выбрать любой поток
-        PackStr("", 0);
+        PackStr("");
         PutPkt();
-        printf("'H' command handle\n");
+        std::cout << "'H' command handle\n";
         break;
 
     case 'v':
@@ -39,8 +43,8 @@ void ClientRequest()
 
     case '!':
         // Pequest for extended remote mode
-        PackStr("OK", 2);
-        printf("request '!' handle\n");
+        PackStr("OK");
+        std::cout << "request '!' handle\n";
         PutPkt();
         break;
 
@@ -58,84 +62,74 @@ void ClientRequest()
         break;
     default:
         // unknown requests are ignored
-        printf("Warning: unknown RSP request: %s", input.data);
+        std::cout << "Warning: unknown RSP request: " << pack.data << '\n';
         break;
     }
-    PrintInput();
 }
 
-// loop to listen for GDB client requests
-void ListenRequests()
+void GDBServer::KillProcess()
 {
-    while(1)
-    {
-        ClientRequest();
-    }
+    std::cout << "kill request recieved: " << pack.data << '\n';
 }
 
-void KillProcess()
+void GDBServer::Continue()
 {
-    printf("kill request recieved: %s\n", input.data);
+    std::cout << "'c' request recieved: " << pack.data << '\n';
 }
 
-void Continue()
+void GDBServer::ReportException()
 {
-    printf("'c' request recieved: %s\n", input.data);
-}
-
-void ReportException()
-{
-    printf("'?' request recieved: %s\n", input.data);
+    std::cout << "'?' request recieved: " << pack.data << '\n';
 }
 
 // handle query packets, recieved from GDB
 
-void QueryPacket()
+void GDBServer::QueryPacket()
 {
-    if(strstr(input.data, "qSupported"))
+    if(strstr(pack.data, "qSupported"))
         qSupported();
     else
     {
-        printf("unknown query packet recieved\n");
+        std::cout << "unknown query packet recieved: " << pack.data << '\n';
         EmptyResp();
     }
 }
 
 //handle v packets, recieved from GDB
 
-void vPacket()
+void GDBServer::vPacket()
 {
-    if(strstr(input.data, "vMustReplyEmpty"))
+    if(strstr(pack.data, "vMustReplyEmpty"))
         vMustReplyEmpty();
     else
     {
-        printf("unknown 'v' packet\n");
+        std::cout << "unknown 'v' packet recieved:" << pack.data << '\n';
         EmptyResp();
     }
 }
 
 // recieve a set of supported features from GDB and send server's set in response
 
-void qSupported()
+void GDBServer::qSupported()
 {
-    if (strstr(input.data, "hwbreak+;"))
+    if (strstr(pack.data, "hwbreak+;"))
     {
-        PackStr("hwbreak+;", 9);
+        PackStr("hwbreak+;");
         PutPkt();
-        printf("qSupported command handle\n");
+        std::cout << "qSupported command handle\n";
     }
 }
 
 // tells GDB that the response to an unknown 'v' packet is empty string
 
-void vMustReplyEmpty()
+void GDBServer::vMustReplyEmpty()
 {
     EmptyResp();
-    printf("vMustReplyEmpty command handle\n");
+    std::cout << "vMustReplyEmpty command handle\n";
 }
 
-void EmptyResp()
+void GDBServer::EmptyResp()
 {
-    PackStr("", 0);
+    PackStr("");
     PutPkt();
 }

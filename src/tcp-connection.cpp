@@ -1,20 +1,14 @@
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <iostream>
 
-#include "../packets.h"
-#include "../requests.h"
+#include "server.hpp"
 
-int server_sock_fd;
-int client_sock_fd;
-extern struct Buf input, output;
-
-void StartServer(int port)
+void GDBServer::StartServer(int port)
 {
     server_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock_fd == -1)
@@ -42,7 +36,7 @@ void StartServer(int port)
         perror("listen() failed");
         exit(EXIT_FAILURE);
     }
-    printf("Listening ... \n");
+    std::cout << "Listening ... \n";
 
     struct sockaddr_in client_addr;
     socklen_t client_addr_size = sizeof(client_addr);
@@ -53,27 +47,11 @@ void StartServer(int port)
         perror("accept() failed");
         exit(EXIT_FAILURE);
     }
-    printf("Someone connected with adress: %s\n", inet_ntoa(client_addr.sin_addr));
+    std::cout << "Someone connected with adress: " <<  inet_ntoa(client_addr.sin_addr) << '\n';
 }
 
-void StopServer()
+void GDBServer::StopServer()
 {
     close(client_sock_fd);
     close(server_sock_fd);
-}
-
-int main(int argc, char* argv[])
-{
-    if (argc < 2)
-    { 
-        printf("no port provided\n");
-        exit(EXIT_FAILURE);
-    }
-
-    int port = atoi(argv[1]);
-    printf("TCP server is starting\n");
-    StartServer(port);
-    ListenRequests();
-    StopServer();
-    return 0;
 }
