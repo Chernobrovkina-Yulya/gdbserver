@@ -8,8 +8,52 @@
 
 #include "server.hpp"
 
-void GDBServer::StartServer(int port)
+static char elf_image[MAX_ELF_IMAGE_SIZE];
+load_elf_str ed;
+
+void print_elf_data() 
 {
+	std::cout << "\tРазмер файла                : " <<	ed.size << '\n';
+	std::cout << "\tEndian (0-LE, 1-BE)         : " << 	ed.endian << '\n';
+	std::cout << "\tАдрес точки входа _start    : " << ed.start << '\n';
+	std::cout << "\tАдрес функции main          : 0x" << ed.main << '\n';
+	std::cout << "\tВызов API (0-GOT, 1-PLT)    : " <<	ed.gotplt << '\n';
+	std::cout << "\tКоличество записей в dynsym : " << 	ed.dynsyms << '\n';
+	std::cout << "\tКоличество записей в symtab : " << 	ed.symbols << '\n';
+	std::cout << "\tАдрес данных dynsym         : " <<	ed.d_addr << '\n';
+	std::cout << "\tАдрес данных symtab         : " << 	ed.s_addr << '\n';
+}
+
+void GDBServer::StartServer(int port, std::string &elf_name)
+{
+    // загрузка исполняемого файла
+    FILE *elf;
+    long elf_size;
+    // открываем двоичный файл для чтения
+    elf = fopen(elf_name.c_str(), "rb");
+    if(elf == NULL)
+    {
+        perror("ошибка открытия файла");
+        exit(EXIT_FAILURE);
+    }
+    // чтение файла
+    elf_size = fread(&elf_image, 1, MAX_ELF_IMAGE_SIZE, elf);
+    if(elf_size <= 0)
+    {
+        perror("ошибка чтения файла");
+        fclose(elf);
+        exit(EXIT_FAILURE);
+    }
+    fclose(elf);
+
+    // инициализируем эмулятор и загружаем в него файл
+    uemu_init();
+    uemu_dsp(7, &elf_image, elf_size, &ed);
+
+    std::cout << "информация об исполняемом файле\n";
+    print_elf_data();
+
+    // создание сокета сервера
     server_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock_fd == -1)
     {

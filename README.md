@@ -8,7 +8,7 @@ Follow this to compile project
     cmake ..
     make
 The output will be a file `server`\
-Now run `server` and pass the port number as a command line argument. The server will wait for a connection to gdb
+Now run `server` and pass the port number and full path to the executable file as a command line argument. The server will wait for a connection to gdb
 
 Run gdb on the host and connect to the remote server
 

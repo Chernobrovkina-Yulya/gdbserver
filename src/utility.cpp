@@ -31,3 +31,16 @@ uint8_t CharToHex(int ch)
            ((ch >= '0') && (ch <= '9')) ? ch - '0':
            ((ch >= 'A') && (ch <= 'F')) ? ch - 'A' + 10 : -1;
 }
+
+std::string ValToHex(uint64_t val, int numbytes)
+{
+    std::string s(2 * numbytes, '0');
+    for (size_t n = 0; n < numbytes; ++n)
+    {
+        unsigned char byte = val & 0xff;
+        s[2 * n] = HexToChar((byte >> 4) & 0xf);
+        s[2 * n + 1] = HexToChar(byte & 0xf);
+        val /= 256;
+    }
+    return s;
+}
