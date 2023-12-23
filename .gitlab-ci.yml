@@ -4,7 +4,7 @@ build-debian:
   script:
     - mkdir build
     - cd build
-    - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -G Ninja ..
+    - cmake -DCMAKE_C_COMPILER=clang-13 -DCMAKE_CXX_COMPILER=clang++-13 -G Ninja ..
     - cmake --build .
   artifacts:
     when: on_success
@@ -20,7 +20,7 @@ build-alt:
   script:
     - mkdir build
     - cd build
-    - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -G Ninja ..
+    - cmake -DCMAKE_C_COMPILER=clang-13 -DCMAKE_CXX_COMPILER=clang++-13 -G Ninja ..
     - cmake --build .
   artifacts:
     when: on_success
